@@ -32,19 +32,17 @@ function selectLevel(level) {
 
 function loadHistory() {
     const historyContainer = document.getElementById('historyContainer');
-    let history = JSON.parse(localStorage.getItem('omoshiroi_history') || '[]');
-
-    const now = new Date().getTime();
-    const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
-
-    // Filter out expired history
-    history = history.filter(item => (now - item.timestamp) < TWENTY_FOUR_HOURS);
-    localStorage.setItem('omoshiroi_history', JSON.stringify(history));
+    const user = OmoshiroiUtils.getUser();
+    let history = OmoshiroiUtils.getUserHistory(user);
 
     if (history.length > 0) {
         historyContainer.innerHTML = '';
-        history.forEach(item => {
-            const dateStr = new Date(item.timestamp).toLocaleString();
+        
+        // Show only latest 3 in dashboard widget
+        const recentHistory = history.slice(-3).reverse();
+        
+        recentHistory.forEach(item => {
+            const dateStr = new Date(item.date).toLocaleString();
             let badgeClass = 'badge-fail';
             if (item.score >= 80) badgeClass = 'badge-master';
             else if (item.score >= 50) badgeClass = 'badge-pass';
@@ -63,6 +61,12 @@ function loadHistory() {
             `;
             historyContainer.appendChild(div);
         });
+        
+        const viewAllBtn = document.createElement('div');
+        viewAllBtn.style.marginTop = '1rem';
+        viewAllBtn.style.textAlign = 'center';
+        viewAllBtn.innerHTML = `<a href="history.html" class="btn btn-primary" style="display: inline-block; width: 100%;">Lihat Semua / View All</a>`;
+        historyContainer.appendChild(viewAllBtn);
     }
 }
 
