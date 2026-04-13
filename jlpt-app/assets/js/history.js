@@ -1,9 +1,9 @@
 // assets/js/history.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (!OmoshiroiUtils.requireAuth()) return;
-
-    const user = OmoshiroiUtils.getUser();
+    let user = OmoshiroiUtils.getUser();
+    if (!user) user = { name: "Trial Guest", role: "guest" };
+    
     const history = OmoshiroiUtils.getUserHistory(user);
     const __lang = localStorage.getItem('lang') || 'id';
 
