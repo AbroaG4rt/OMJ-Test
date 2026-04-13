@@ -562,7 +562,7 @@ body.login-layout {
     top: -100px;
     height: 100px;
     width: 2px;
-    background: #ccc;
+    background: ##cccccc00;
     z-index: -1;
 }
 
