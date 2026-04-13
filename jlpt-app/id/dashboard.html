@@ -14,10 +14,12 @@
         <div class="container flex items-center justify-between">
             <a href="index.html" class="brand"><img src="../assets/images/logo.png" alt="Logo" style="height: 30px; margin-right: 0.5rem;"> OMOSHIROI</a>
             <nav class="nav-links">
-                <span id="userNameDisplay" style="font-weight: 600; color: var(--text-primary);"></span>
+                <span id="guestLabel" class="hidden" style="font-size: 0.9rem; color: var(--text-secondary); font-style: italic;">Mode Tamu (Hanya N5)</span>
+                <span id="userNameDisplay" class="hidden" style="font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;"></span>
                 <a href="history.html">Riwayat</a>
-                <a href="#" id="logoutBtn">Keluar</a>
-                <a href="../en/dashboard.html" onclick="localStorage.setItem('lang','en')" style="font-size:0.85rem;">EN</a>
+                <a href="login.html" id="loginBtn" class="btn btn-primary btn-sm hidden" style="padding: 0.4rem 1rem;">Login</a>
+                <a href="#" id="logoutBtn" class="hidden">Keluar</a>
+                <a href="../en/dashboard.html" onclick="localStorage.setItem('lang','en')" style="font-size:0.85rem; padding-left: 0.5rem; border-left: 1px solid var(--border-color);">EN</a>
             </nav>
         </div>
     </header>
