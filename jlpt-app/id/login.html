@@ -9,7 +9,11 @@
     <link rel="alternate" hreflang="en" href="../en/login.html">
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
-<body>
+<body class="login-layout">
+    <!-- Japanese Decor Elements -->
+    <img src="../assets/images/torii.svg" class="torii-decoration" alt="" aria-hidden="true">
+    <div class="jp-flag-container" aria-hidden="true"><div class="jp-flag-circle"></div></div>
+
     <div class="container" style="max-width: 450px; margin-top: 5rem;">
         <div class="card text-center">
             <h1 class="brand justify-center" style="font-size: 2rem; margin-bottom: 0.5rem;">
@@ -33,7 +37,7 @@
                 </div>
                 <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; text-align: left;">
                     <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem; color: var(--text-secondary);">
-                        <input type="checkbox" id="rememberMe" style="accent-color: var(--primary-color); width: 16px; height: 16px;">
+                        <input type="checkbox" id="rememberMe" style="accent-color: var(--primary); width: 16px; height: 16px;">
                         Ingat Saya
                     </label>
                     <span style="font-size: 0.75rem; color: var(--text-secondary); opacity: 0.8;">Gunakan hanya di perangkat pribadi</span>
@@ -43,12 +47,12 @@
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">MULAI SESI</button>
                 <div style="margin-top: 1rem; text-align: left;">
-                    <a href="#" id="forgotPasswordBtn" style="font-size: 0.85rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">
+                    <a href="#" id="forgotPasswordBtn" style="font-size: 0.85rem; color: var(--primary); text-decoration: none; font-weight: 500;">
                         🔐 Lupa kata sandi?
                     </a>
                 </div>
             </form>
-            <div style="margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-secondary); background: var(--bg-color); padding: 1rem; border-radius: var(--radius); border: 1px dashed var(--border-color);">
+            <div style="margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-secondary); background: var(--background); padding: 1rem; border-radius: var(--radius); border: 1px dashed var(--border-color);">
                 <p style="margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 600;">Gunakan akun demo (Akses N5):</p>
                 <div style="font-family: monospace; display: flex; flex-direction: column; gap: 0.25rem;">
                     <span>Username: <strong>omoshiroi_guest</strong></span>
@@ -72,7 +76,7 @@
             <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
                 Jika Anda lupa kata sandi, silakan hubungi admin kami untuk bantuan pemulihan akun.
             </p>
-            <div style="background: var(--sakura-accent); padding: 1rem; border-radius: var(--radius); margin-bottom: 1.5rem;">
+            <div style="background: var(--primary-light); padding: 1rem; border-radius: var(--radius); margin-bottom: 1.5rem;">
                 <p style="font-size: 0.85rem; color: var(--danger-color); font-weight: 600; margin-bottom: 0;">
                     Sertakan username Anda saat menghubungi admin.
                 </p>
