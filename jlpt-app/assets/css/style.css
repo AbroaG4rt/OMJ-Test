@@ -84,7 +84,7 @@ header {
 .brand {
     font-weight: 700;
     font-size: 1.25rem;
-    color: var(--background);
+    color: #c0392b;
     text-decoration: none;
     letter-spacing: 0.05em;
     display: flex;
