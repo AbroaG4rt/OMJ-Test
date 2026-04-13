@@ -40,9 +40,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         ]
     };
 
-    if (!OmoshiroiUtils.requireAuth()) return;
+    let user = OmoshiroiUtils.getUser();
+    if (!user) user = { name: "Trial Guest", role: "guest" };
 
-    const user = OmoshiroiUtils.getUser();
     let resultData = null;
     let isHistoricalView = false;
     const selectedHistoryId = localStorage.getItem('selected_history_id');
