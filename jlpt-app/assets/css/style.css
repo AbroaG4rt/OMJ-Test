@@ -372,6 +372,56 @@ header {
     display: none !important;
 }
 
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition);
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: var(--paper-bg);
+    padding: 2rem;
+    border-radius: var(--radius);
+    max-width: 450px;
+    width: 90%;
+    box-shadow: var(--shadow-hover);
+    position: relative;
+    transform: translateY(20px);
+    transition: var(--transition);
+}
+
+.modal-overlay.active .modal-content {
+    transform: translateY(0);
+}
+
+.modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    line-height: 1;
+}
+.modal-close:hover {
+    color: var(--danger-color);
+}
+
 /* Anti-Cheat UI Enhancements */
 
 /* Protect test copying global constraint */
