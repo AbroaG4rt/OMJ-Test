@@ -1,8 +1,6 @@
 // assets/js/test.js
 
 document.addEventListener('DOMContentLoaded', async () => {
-    if (!OmoshiroiUtils.requireAuth()) return;
-
     const __lang = localStorage.getItem('lang') || 'id';
     const __dashboardTarget = __lang === 'id' ? 'id/dashboard.html' : 'en/dashboard.html';
     const __resultTarget   = __lang === 'id' ? 'id/result.html'    : 'en/result.html';
@@ -14,6 +12,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const { level, endTime } = testState;
+
+    if (!OmoshiroiUtils.checkAccess(level)) {
+        alert(__lang === 'id' ? "Akses Ditolak. Silakan login." : "Access Denied. Please login.");
+        window.location.href = __lang === 'id' ? 'id/login.html' : 'en/login.html';
+        return;
+    }
     document.getElementById('testLevelBadge').textContent = level;
 
     // Security: Tab Switch Detection
