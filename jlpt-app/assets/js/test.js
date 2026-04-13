@@ -250,7 +250,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             nextBtn.style.backgroundColor = "var(--success-color)";
         } else {
             nextBtn.textContent = "Next →";
-            nextBtn.style.backgroundColor = ""; // Reset to CSS class default
+            nextBtn.classList.remove('btn-primary');
+            nextBtn.classList.add('btn-primary');
+            nextBtn.style.backgroundColor = "var(--primary)";
         }
     }
 
