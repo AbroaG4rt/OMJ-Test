@@ -41,9 +41,15 @@
     <script src="../assets/js/utils.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            if (!OmoshiroiUtils.requireAuth()) return;
             const urlParams = new URLSearchParams(window.location.search);
             const level = urlParams.get('level') || 'N5';
+            
+            if (!OmoshiroiUtils.checkAccess(level)) {
+                alert("Silakan login untuk mengakses level ini.");
+                window.location.href = "login.html";
+                return;
+            }
+
             const levelInfo = {
                 "N5": "95 Soal • 120 Menit", "N4": "100 Soal • 125 Menit",
                 "N3": "130 Soal • 130 Menit", "N2": "135 Soal • 140 Menit",
