@@ -3,8 +3,15 @@
 
 window.OmoshiroiUtils = {
     getUser: function() {
-        const user = localStorage.getItem('omoshiroi_user');
-        return user ? JSON.parse(user) : null;
+        const userStr = localStorage.getItem('omoshiroi_user') || sessionStorage.getItem('omoshiroi_user');
+        if (!userStr) return null;
+        try {
+            const data = JSON.parse(userStr);
+            if (data && data.user) return data.user;
+            return data;
+        } catch (e) {
+            return null;
+        }
     },
     
     saveResult: function(user, result) {
@@ -24,6 +31,7 @@ window.OmoshiroiUtils = {
     logout: function() {
         // Clear session only. Do not delete history.
         localStorage.removeItem('omoshiroi_user');
+        sessionStorage.removeItem('omoshiroi_user');
         window.location.href = 'login.html';
     },
 
