@@ -1,102 +1,119 @@
-// assets/js/auth.js
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMOSHIROI JAPAN - Login</title>
+    <link rel="icon" type="image/png" href="../assets/images/favicon.png">
+    <link rel="alternate" hreflang="id" href="../id/login.html">
+    <link rel="alternate" hreflang="en" href="login.html">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+    <div class="container" style="max-width: 450px; margin-top: 5rem;">
+        <div class="card text-center">
+            <h1 class="brand justify-center" style="font-size: 2rem; margin-bottom: 0.5rem;">
+                <img src="../assets/images/logo.png" alt="Logo" style="height: 40px; margin-right: 0.5rem;"> OMOSHIROI
+            </h1>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem;">JLPT Online Test Platform</p>
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Determine language-aware redirect target
-    // login_id.html / login_en.html set window.__loginSuccessTarget before this script loads
-    const successTarget = window.__loginSuccessTarget || 'dashboard.html';
+            <form id="loginForm" class="flex-col">
+                <div class="form-group">
+                    <label class="form-label" for="username">Name (ローマ字)</label>
+                    <input type="text" id="username" class="form-control" placeholder="e.g. Taro Yamada" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="password">Examination Password</label>
+                    <div style="position: relative;">
+                        <input type="password" id="password" class="form-control" placeholder="Enter organization password" style="padding-right: 2.5rem;">
+                        <button type="button" id="togglePasswordBtn" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--text-secondary);" aria-label="Toggle password visibility">
+                            👁️
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; text-align: left;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem; color: var(--text-secondary);">
+                        <input type="checkbox" id="rememberMe" style="accent-color: var(--primary-color); width: 16px; height: 16px;">
+                        Remember Me
+                    </label>
+                    <span style="font-size: 0.75rem; color: var(--text-secondary); opacity: 0.8;">Use only on personal devices</span>
+                </div>
+                <div id="loginError" class="hidden" style="color: var(--danger-color); font-size: 0.85rem; margin-bottom: 1rem; background: #f8dbdf; padding: 0.5rem; border-radius: 4px;">
+                    Invalid credentials. Continuing as guest session.
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">START SESSION</button>
+                <div style="margin-top: 1rem; text-align: left;">
+                    <a href="#" id="forgotPasswordBtn" style="font-size: 0.85rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">
+                        🔐 Forgot password?
+                    </a>
+                </div>
+            </form>
 
-    // If user is already logged in, send to the correct dashboard
-    const localUserStr = localStorage.getItem('omoshiroi_user');
-    const sessionUserStr = sessionStorage.getItem('omoshiroi_user');
-    
-    let hasValidSession = false;
-    if (localUserStr) {
-        const parsed = JSON.parse(localUserStr);
-        if (parsed.remember) hasValidSession = true;
-    } else if (sessionUserStr) {
-        hasValidSession = true;
-    }
+            <div style="margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-secondary); background: var(--bg-color); padding: 1rem; border-radius: var(--radius); border: 1px dashed var(--border-color);">
+                <p style="margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 600;">Use Demo Account (N5 Access):</p>
+                <div style="font-family: monospace; display: flex; flex-direction: column; gap: 0.25rem;">
+                    <span>Username: <strong>omoshiroi_guest</strong></span>
+                    <span>Password: <strong>guest123</strong></span>
+                </div>
+            </div>
+            <div style="margin-top: 1rem;">
+                <a href="dashboard.html" class="btn btn-outline btn-sm" style="width: 100%; border-color: var(--border-color); color: var(--text-primary);">Continue as Guest (N5 Only)</a>
+            </div>
+            <div style="margin-top: 1rem;">
+                <a href="../id/login.html" onclick="localStorage.setItem('lang','id')" style="font-size:0.8rem; color:var(--text-secondary);">Ganti ke Bahasa Indonesia</a>
+            </div>
+        </div>
+    </div>
 
-    if (hasValidSession) {
-        window.location.href = successTarget;
-        return;
-    }
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="modal-overlay">
+        <div class="modal-content text-center">
+            <button class="modal-close" id="closeForgotModal">&times;</button>
+            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Account Recovery</h3>
+            <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+                If you have forgotten your password, please contact our admin team for account recovery assistance.
+            </p>
+            <div style="background: var(--sakura-accent); padding: 1rem; border-radius: var(--radius); margin-bottom: 1.5rem;">
+                <p style="font-size: 0.85rem; color: var(--danger-color); font-weight: 600; margin-bottom: 0;">
+                    Please provide your username when contacting the admin.
+                </p>
+            </div>
+            <a href="https://wa.me/628123456789?text=Hello%20Admin,%20I%20forgot%20my%20JLPT%20account%20password.%20Please%20help." target="_blank" class="btn btn-primary" style="background-color: #25D366; color: white; width: 100%; border: none;">
+                Contact via WhatsApp
+            </a>
+        </div>
+    </div>
 
-    // Toggle Password Visibility
-    const togglePasswordBtn = document.getElementById('togglePasswordBtn');
-    const passwordInput = document.getElementById('password');
-    if (togglePasswordBtn && passwordInput) {
-        togglePasswordBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            // Toggle icon content
-            togglePasswordBtn.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
-        });
-    }
+    <script src="../assets/js/utils.js"></script>
+    <script>
+        localStorage.setItem('lang', 'en');
+        window.__loginSuccessTarget = 'dashboard.html';
 
-    const loginForm = document.getElementById('loginForm');
-    const loginError = document.getElementById('loginError');
+        const forgotModal = document.getElementById('forgotPasswordModal');
+        const openForgotBtn = document.getElementById('forgotPasswordBtn');
+        const closeForgotBtn = document.getElementById('closeForgotModal');
 
-    if (loginForm) {
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const usernameInput = document.getElementById('username').value.trim();
-            const passwordInput = document.getElementById('password').value.trim();
-
-            if (!usernameInput) return;
-
-            try {
-                // Try parent-relative path first (works from en/ and id/ subfolders)
-                let response;
-                try {
-                    response = await fetch('../data/users.json');
-                    if (!response.ok) throw new Error('not found');
-                } catch(_) {
-                    response = await fetch('data/users.json');
-                }
-                const users = await response.json();
-                const matchedUser = users.find(u =>
-                    u.name.toLowerCase() === usernameInput.toLowerCase() &&
-                    u.password === passwordInput
-                );
-
-                if (matchedUser) {
-                    createSession(matchedUser.name, matchedUser.role || 'guest');
-                } else {
-                    loginError.classList.remove('hidden');
-                    const lang = localStorage.getItem('lang') || 'id';
-                    loginError.textContent = lang === 'id'
-                        ? 'Akun tidak ditemukan. Silakan periksa kredensial Anda.'
-                        : 'Account not found. Please review your credentials.';
-                }
-            } catch (error) {
-                console.error('Error fetching users.json:', error);
-                loginError.classList.remove('hidden');
-                loginError.textContent = 'System Error: Cannot validate login.';
-            }
-        });
-    }
-
-    function createSession(name, role) {
-        const rememberMeCb = document.getElementById('rememberMe');
-        const rememberMe = rememberMeCb ? rememberMeCb.checked : false;
-
-        const sessionData = {
-            name: name,
-            role: role,
-            loginTime: new Date().getTime(),
-            password: (document.getElementById('password').value || '').trim()
-        };
-
-        const storagePayload = JSON.stringify({ user: sessionData, remember: rememberMe });
-
-        if (rememberMe) {
-            localStorage.setItem('omoshiroi_user', storagePayload);
-        } else {
-            sessionStorage.setItem('omoshiroi_user', storagePayload);
+        if(openForgotBtn) {
+            openForgotBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                forgotModal.classList.add('active');
+            });
         }
 
-        window.location.href = successTarget;
-    }
-});
+        if(closeForgotBtn) {
+            closeForgotBtn.addEventListener('click', () => {
+                forgotModal.classList.remove('active');
+            });
+        }
+
+        if(forgotModal) {
+            forgotModal.addEventListener('click', (e) => {
+                if(e.target === forgotModal) {
+                    forgotModal.classList.remove('active');
+                }
+            });
+        }
+    </script>
+    <script src="../assets/js/auth.js"></script>
+</body>
+</html>
