@@ -1,5 +1,17 @@
 [
   {
+    "id": "DEMO-Q3",
+    "type": "image",
+    "question": "DEMO - Q3: Pilih gambar yang menunjukkan 'Mobil' (Kuruma) <u>くるま</u>.",
+    "options": [
+      { "label": "A", "image": "https://via.placeholder.com/150/ff0000/ffffff?text=Image+A" },
+      { "label": "B", "image": "https://via.placeholder.com/150/00ff00/ffffff?text=Image+B" },
+      { "label": "C", "image": "https://via.placeholder.com/150/0000ff/ffffff?text=Image+C" },
+      { "label": "D", "image": "https://via.placeholder.com/150/ffff00/ffffff?text=Image+D" }
+    ],
+    "correctAnswer": "C"
+  },
+  {
     "id": "N5-Q1",
     "type": "reading",
     "question": "N5 - Q1: What does '先生 (Sensei)' mean?",
