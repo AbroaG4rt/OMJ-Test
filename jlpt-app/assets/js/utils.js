@@ -122,3 +122,37 @@ window.OmoshiroiUtils = {
 
 // Global Security Settings
 document.addEventListener('contextmenu', event => event.preventDefault()); // Disable right click
+
+// Global Mobile Navigation Logic
+document.addEventListener('DOMContentLoaded', () => {
+    const hamburgerBtn = document.getElementById('mobileMenuBtn');
+    const navLinks = document.querySelector('.nav-links');
+    const navOverlay = document.getElementById('mobileNavOverlay');
+
+    if (hamburgerBtn && navLinks && navOverlay) {
+        function toggleMenu() {
+            const isActive = navLinks.classList.toggle('active');
+            navOverlay.classList.toggle('active');
+            
+            if (isActive) {
+                document.body.classList.add('nav-open');
+                hamburgerBtn.innerHTML = '&#10005;'; // X icon
+            } else {
+                document.body.classList.remove('nav-open');
+                hamburgerBtn.textContent = '☰'; // Hamburger icon
+            }
+        }
+
+        hamburgerBtn.addEventListener('click', toggleMenu);
+        navOverlay.addEventListener('click', toggleMenu);
+
+        // Auto collapse on link click
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (navLinks.classList.contains('active')) {
+                    toggleMenu();
+                }
+            });
+        });
+    }
+});
