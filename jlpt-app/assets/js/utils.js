@@ -44,6 +44,22 @@ window.OmoshiroiUtils = {
             return false;
         }
         return true;
+    },
+
+    checkAccess: function(level) {
+        const user = this.getUser();
+        
+        // Guest (not logged in or explicitly has 'guest' role like the demo account)
+        if (!user || user.role === "guest") {
+            return level === "N5";
+        }
+
+        // Premium Role (Logged-in valid users)
+        if (user.role === "premium") {
+            return true;
+        }
+
+        return false;
     }
 };
 
