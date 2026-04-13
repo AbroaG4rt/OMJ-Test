@@ -68,6 +68,55 @@ window.OmoshiroiUtils = {
         }
 
         return false;
+    },
+
+    showLoader: function() {
+        if (document.getElementById('jlpt-global-loader')) {
+            document.getElementById('jlpt-global-loader').classList.remove('hidden');
+            return;
+        }
+
+        const loaderWrapper = document.createElement('div');
+        loaderWrapper.id = 'jlpt-global-loader';
+        loaderWrapper.className = 'jlpt-loader-wrapper';
+        loaderWrapper.innerHTML = `
+            <div class="jlpt-loader">
+                <svg viewBox="0 0 100 100" width="100%" height="100%">
+                    <!-- Sun / Goal glowing -->
+                    <circle cx="80" cy="20" r="10" class="loader-glow" />
+                    
+                    <!-- Torii Gate Background -->
+                    <g class="loader-torii-bg">
+                        <path d="M 40 10 Q 60 7 80 10 L 82 13 Q 60 10 40 13 Z" />
+                        <rect x="42" y="13" width="36" height="3" />
+                        <rect x="48" y="16" width="4" height="60" />
+                        <rect x="68" y="16" width="4" height="60" />
+                        <rect x="45" y="25" width="30" height="3" />
+                    </g>
+                    
+                    <!-- Diagonal Stairs (bottom-left to top-right) -->
+                    <path class="loader-stairs-path" d="M 0 100 L 20 100 L 20 80 L 40 80 L 40 60 L 60 60 L 60 40 L 80 40 L 80 20 L 100 20" />
+                    
+                    <!-- Character (Stickman) progressing upwards -->
+                    <g class="loader-character-group">
+                        <circle cx="20" cy="74" r="3" /> <!-- Head -->
+                        <line x1="20" y1="77" x2="20" y2="86" /> <!-- Body -->
+                        <line x1="20" y1="80" x2="16" y2="82" /> <!-- Left Arm -->
+                        <line x1="20" y1="80" x2="24" y2="82" /> <!-- Right Arm -->
+                        <line x1="20" y1="86" x2="16" y2="92" /> <!-- Left Leg -->
+                        <line x1="20" y1="86" x2="24" y2="92" /> <!-- Right Leg -->
+                    </g>
+                </svg>
+            </div>
+        `;
+        document.body.appendChild(loaderWrapper);
+    },
+
+    hideLoader: function() {
+        const loader = document.getElementById('jlpt-global-loader');
+        if (loader) {
+            loader.classList.add('hidden');
+        }
     }
 };
 
