@@ -143,8 +143,8 @@ header {
 }
 
 .btn-primary {
-    background-color: var(--primary);
-    color: var(--background);
+    background-color: #c0392b;
+    color: #ffffff;
 }
 
 .btn-primary:hover {
