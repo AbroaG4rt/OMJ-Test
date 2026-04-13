@@ -78,6 +78,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         questionsContainer.innerHTML = "<p class='text-center'>Error loading questions. Please try again.</p>";
     }
 
+    function sanitizeHTML(str) {
+        if (!str) return '';
+        // Basic protection: Remove script tags
+        return str.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                  // Also remove on... event attributes
+                  .replace(/ on\w+="[^"]*"/g, '')
+                  .replace(/ on\w+='[^']*'/g, '')
+                  .replace(/ on\w+=\w+/g, '');
+    }
+
     function renderPage(pageIndex) {
         currentPage = pageIndex;
         questionsContainer.innerHTML = '';
@@ -92,29 +102,116 @@ document.addEventListener('DOMContentLoaded', async () => {
             qDiv.className = 'question-item';
 
             let mediaHTML = '';
-            if (q.image) mediaHTML += `<img src="assets/images/${q.image}" alt="Question Image" style="max-width:100%; border-radius:4px; margin-bottom:1rem; display:block;">`;
-            if (q.audio) mediaHTML += `<audio controls style="width:100%; margin-bottom:1rem;"><source src="assets/audio/${q.audio}" type="audio/mpeg">Your browser does not support the audio element.</audio>`;
+            if (q.image && q.type !== 'image') {
+                // Regular question with image
+                mediaHTML += `<img src="assets/images/${q.image}" alt="Question Image" style="max-width:100%; border-radius:4px; margin-bottom:1rem; display:block;">`;
+            }
+            if (q.audio) {
+                const maxPlays = q.max_play || 2;
+                const playedCount = parseInt(localStorage.getItem(`audio_${q.id}_playcount`) || '0', 10);
+                const remainingPlays = Math.max(0, maxPlays - playedCount);
+                
+                let playText = __lang === 'id' ? 'Putar Audio' : 'Play Audio';
+                let remainingText = __lang === 'id' ? `Sisa putar: ${remainingPlays}x` : `Remaining plays: ${remainingPlays}x`;
+                
+                if (remainingPlays <= 0) {
+                    playText = __lang === 'id' ? 'Audio terkunci' : 'Audio locked';
+                    remainingText = __lang === 'id' ? 'Audio sudah tidak dapat diputar' : 'Audio can no longer be played';
+                }
 
-            let optionsHTML = '';
-            for (const [key, value] of Object.entries(q.options)) {
-                // Check if this option was previously selected
-                const isChecked = testState.answers[q.id] === key;
-                optionsHTML += `
-                    <label class="option-label ${isChecked ? 'selected' : ''}" data-qid="${q.id}" data-opt="${key}">
-                        <input type="radio" name="q_${q.id}" value="${key}" ${isChecked ? 'checked' : ''} style="display:none;">
-                        <strong>${key}.</strong> ${value}
-                    </label>
+                mediaHTML += `
+                    <div class="audio-player-wrapper" style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color);">
+                        <button type="button" class="btn btn-primary play-audio-btn" data-qid="${q.id}" data-audio="${q.audio}" data-max="${maxPlays}" ${remainingPlays <= 0 ? 'disabled' : ''} style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; width: 100%;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                            <span class="btn-text">${playText}</span>
+                        </button>
+                        <div class="audio-feedback text-center" id="audio_feedback_${q.id}" style="font-size: 0.85rem; color: ${remainingPlays <= 0 ? 'var(--danger-color)' : 'var(--text-secondary)'}; font-weight: 500;">
+                            ${remainingText}
+                        </div>
+                    </div>
                 `;
             }
 
+            let optionsHTML = '';
+            
+            // Check if options is Array (image type requirement)
+            if (Array.isArray(q.options)) {
+                // Grid wrapper handle in CSS but we can add inline here optionally
+                optionsHTML += `<div class="options-grid image-grid">`;
+                q.options.forEach(opt => {
+                    const isChecked = testState.answers[q.id] === opt.label;
+                    optionsHTML += `
+                        <label class="option-label image-option-label ${isChecked ? 'selected' : ''}" data-qid="${q.id}" data-opt="${opt.label}">
+                            <input type="radio" name="q_${q.id}" value="${opt.label}" ${isChecked ? 'checked' : ''} style="display:none;">
+                            <div class="image-option-content" style="text-align: center;">
+                                <div class="image-label-badge" style="margin-bottom: 0.5rem; font-weight: 600; color: var(--primary-color); display: inline-block; padding: 2px 10px; background: var(--sakura-accent); border-radius: 4px;">${opt.label}</div>
+                                <img src="${opt.image}" alt="Option ${opt.label}" class="option-image" style="max-width: 100%; height: auto; border-radius: 4px; display: block; margin: 0 auto;">
+                            </div>
+                        </label>
+                    `;
+                });
+                optionsHTML += `</div>`;
+            } else {
+                // Object options (existing format)
+                optionsHTML += `<div class="options-grid">`;
+                for (const [key, value] of Object.entries(q.options)) {
+                    const isChecked = testState.answers[q.id] === key;
+                    optionsHTML += `
+                        <label class="option-label ${isChecked ? 'selected' : ''}" data-qid="${q.id}" data-opt="${key}">
+                            <input type="radio" name="q_${q.id}" value="${key}" ${isChecked ? 'checked' : ''} style="display:none;">
+                            <strong>${key}.</strong> ${sanitizeHTML(value)}
+                        </label>
+                    `;
+                }
+                optionsHTML += `</div>`;
+            }
+
             qDiv.innerHTML = `
-                <div class="question-text">${globalIndex}. ${q.question}</div>
+                <div class="question-text">${globalIndex}. ${sanitizeHTML(q.question)}</div>
                 ${mediaHTML}
-                <div class="options-grid">
-                    ${optionsHTML}
-                </div>
+                ${optionsHTML}
             `;
             questionsContainer.appendChild(qDiv);
+        });
+
+        // Add event listeners for audio buttons
+        document.querySelectorAll('.play-audio-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.disabled) return;
+                
+                const qid = this.getAttribute('data-qid');
+                const audioFile = this.getAttribute('data-audio');
+                const maxPlays = parseInt(this.getAttribute('data-max'), 10);
+                
+                let playedCount = parseInt(localStorage.getItem(`audio_${qid}_playcount`) || '0', 10);
+                
+                if (playedCount < maxPlays) {
+                    // Play audio
+                    const audioObj = new Audio(`assets/audio/${audioFile}`);
+                    audioObj.play().catch(e => {
+                        console.error('Audio play failed', e);
+                        alert(__lang === 'id' ? 'Gagal memutar audio.' : 'Failed to play audio.');
+                    });
+                    
+                    // Increment count
+                    playedCount++;
+                    localStorage.setItem(`audio_${qid}_playcount`, playedCount);
+                    
+                    const remainingPlays = maxPlays - playedCount;
+                    const feedbackEl = document.getElementById(`audio_feedback_${qid}`);
+                    
+                    if (remainingPlays <= 0) {
+                        this.disabled = true;
+                        this.querySelector('.btn-text').textContent = __lang === 'id' ? 'Audio terkunci' : 'Audio locked';
+                        feedbackEl.textContent = __lang === 'id' ? 'Audio sudah tidak dapat diputar' : 'Audio can no longer be played';
+                        feedbackEl.style.color = 'var(--danger-color)';
+                        this.style.opacity = '0.5';
+                        this.style.cursor = 'not-allowed';
+                    } else {
+                        feedbackEl.textContent = __lang === 'id' ? `Sisa putar: ${remainingPlays}x` : `Remaining plays: ${remainingPlays}x`;
+                    }
+                }
+            });
         });
 
         // Add event listeners to labels for custom styling
