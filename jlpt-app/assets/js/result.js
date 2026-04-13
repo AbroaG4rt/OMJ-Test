@@ -43,7 +43,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!OmoshiroiUtils.requireAuth()) return;
 
     const user = OmoshiroiUtils.getUser();
-    const resultData = JSON.parse(localStorage.getItem('omoshiroi_latest_result'));
+    let resultData = null;
+    let isHistoricalView = false;
+    const selectedHistoryId = localStorage.getItem('selected_history_id');
+
+    if (selectedHistoryId) {
+        const history = OmoshiroiUtils.getUserHistory(user);
+        const historicalItem = history.find(h => h.test_id === selectedHistoryId);
+        if (historicalItem) {
+            resultData = {
+                level: historicalItem.level,
+                answers: historicalItem.answers.reduce((acc, ans) => {
+                    acc[ans.question_id] = ans.user_answer;
+                    return acc;
+                }, {}),
+                cheatProfile: historicalItem.cheatProfile || null,
+                timestamp: new Date(historicalItem.date).getTime()
+            };
+            isHistoricalView = true;
+        }
+        localStorage.removeItem('selected_history_id');
+    }
+
+    if (!resultData) {
+        resultData = JSON.parse(localStorage.getItem('omoshiroi_latest_result'));
+    }
 
     if (!resultData) {
         window.location.href = __dashTarget;
@@ -79,10 +103,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         const score = (correctCount / totalCount) * 100;
 
         // Save to History natively here (protect against duplicates via timestamp)
-        let history = JSON.parse(localStorage.getItem('omoshiroi_history') || '[]');
-        if (!history.find(h => h.timestamp === timestamp)) {
-            history.push({ level: level, score: score, timestamp: timestamp });
-            localStorage.setItem('omoshiroi_history', JSON.stringify(history));
+        if (!isHistoricalView) {
+            const testId = `${level}-${timestamp}`;
+            const robustResult = {
+                test_id: testId,
+                level: level,
+                score: score,
+                correct: correctCount,
+                wrong: totalCount - correctCount,
+                total: totalCount,
+                date: new Date(timestamp).toISOString(),
+                answers: evaluation.map(e => ({
+                    question_id: e.id,
+                    user_answer: e.userAns,
+                    correct_answer: e.correctAnswer
+                }))
+            };
+            
+            const history = OmoshiroiUtils.getUserHistory(user);
+            if (!history.find(h => h.test_id === testId)) {
+                OmoshiroiUtils.saveResult(user, robustResult);
+            }
         }
 
         // --- DOM POPULATION ---
