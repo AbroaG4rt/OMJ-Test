@@ -7,7 +7,22 @@ window.OmoshiroiUtils = {
         return user ? JSON.parse(user) : null;
     },
     
+    saveResult: function(user, result) {
+        if (!user || !user.name) return;
+        const key = `test_history_${user.name}`;
+        const history = JSON.parse(localStorage.getItem(key)) || [];
+        history.push(result);
+        localStorage.setItem(key, JSON.stringify(history));
+    },
+
+    getUserHistory: function(user) {
+        if (!user || !user.name) return [];
+        const key = `test_history_${user.name}`;
+        return JSON.parse(localStorage.getItem(key)) || [];
+    },
+
     logout: function() {
+        // Clear session only. Do not delete history.
         localStorage.removeItem('omoshiroi_user');
         window.location.href = 'login.html';
     },
