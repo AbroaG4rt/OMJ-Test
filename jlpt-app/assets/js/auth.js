@@ -39,19 +39,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 );
 
                 if (matchedUser) {
-                    createSession(matchedUser.name, 'registered');
+                    createSession(matchedUser.name, matchedUser.role || 'guest');
                 } else {
                     loginError.classList.remove('hidden');
-                    // Show message in correct language
                     const lang = localStorage.getItem('lang') || 'id';
                     loginError.textContent = lang === 'id'
-                        ? 'Akun tidak ditemukan. Membuat sesi tamu...'
-                        : 'Account not found. Starting temporary session...';
-                    setTimeout(() => createSession(usernameInput, 'guest'), 1500);
+                        ? 'Akun tidak ditemukan. Silakan periksa kredensial Anda.'
+                        : 'Account not found. Please review your credentials.';
                 }
             } catch (error) {
                 console.error('Error fetching users.json:', error);
-                createSession(usernameInput, 'guest');
+                loginError.classList.remove('hidden');
+                loginError.textContent = 'System Error: Cannot validate login.';
             }
         });
     }
