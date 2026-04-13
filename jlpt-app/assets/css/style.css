@@ -2,7 +2,7 @@
 
 :root {
     /* Core Semantic Palette */
-    --primary: #C0392B;     /* Torii Red */
+    --primary: #c45c51;     /* Torii Red */
     --secondary: #1A2035;   /* Deep Navy */
     --background: #FFFFFF;  /* Main background */
     --surface: #F2F3F4;     /* Cards, headers, inputs */
@@ -143,8 +143,8 @@ header {
 }
 
 .btn-primary {
-    background-color: #c0392b;
-    color: #ffffff;
+    background-color: var(--primary);
+    color: var(--background);
 }
 
 .btn-primary:hover {
