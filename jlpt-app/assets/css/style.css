@@ -539,10 +539,10 @@ body.login-layout {
 /* Waving Japanese Flag Container */
 .jp-flag-container {
     position: absolute;
-    top: 4vh;
-    left: 4vw;
-    width: 60px;
-    height: 40px;
+    top: 16vh;
+    left: 30vw;
+    width: 100px;
+    height: 109px;
     background: #ffffff;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     border-radius: 2px;
@@ -574,17 +574,17 @@ body.login-layout {
 }
 
 @keyframes flagWave {
-    0% { transform: rotate(-3deg); }
-    100% { transform: rotate(3deg); }
+    0% { transform: rotate(110deg); }
+    100% { transform: rotate(171deg); }
 }
 
 /* Torii Gate Decoration */
 .torii-decoration {
     position: absolute;
-    top: -2vh;
-    right: -2vw;
-    width: 220px;
-    opacity: 0.5;
+    top: -9vh;
+    right: 29vw;
+    width: 215px;
+    opacity: 1.5;
     z-index: 1;
     pointer-events: none;
     filter: drop-shadow(0 8px 12px rgba(0,0,0,0.08));
