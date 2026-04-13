@@ -1,14 +1,50 @@
 // assets/js/dashboard.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (!OmoshiroiUtils.requireAuth()) return;
-
     const user = OmoshiroiUtils.getUser();
-    document.getElementById('userNameDisplay').textContent = `Welcome, ${user.name}`;
+    const guestLabel = document.getElementById('guestLabel');
+    const userNameDisplay = document.getElementById('userNameDisplay');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const lang = localStorage.getItem('lang') || 'id';
 
-    document.getElementById('logoutBtn').addEventListener('click', (e) => {
-        e.preventDefault();
-        OmoshiroiUtils.logout();
+    if (!user) {
+        if (guestLabel) guestLabel.classList.remove('hidden');
+        if (loginBtn) loginBtn.classList.remove('hidden');
+    } else {
+        if (userNameDisplay) {
+            userNameDisplay.classList.remove('hidden');
+            const roleBadge = user.role === 'premium' ? 
+                `<span class="badge" style="background:#ffd700; color:#5c4f00;">Premium</span>` : 
+                `<span class="badge">Guest</span>`;
+            userNameDisplay.innerHTML = `<span>${lang === 'id' ? 'Hai' : 'Hi'}, ${user.name}</span> ${roleBadge}`;
+        }
+        if (logoutBtn) {
+            logoutBtn.classList.remove('hidden');
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                OmoshiroiUtils.logout();
+            });
+        }
+    }
+
+    // Lock cards based on Access Tier
+    document.querySelectorAll('.level-card').forEach(card => {
+        const levelTitle = card.querySelector('.level-title').textContent.trim();
+        if (!OmoshiroiUtils.checkAccess(levelTitle)) {
+            card.classList.add('locked-card');
+            // Override the inline onclick handler by replacing it on the DOM node natively
+            card.onclick = (e) => {
+                e.preventDefault();
+                const msg = lang === 'id' ? "Silakan login untuk membuka level ini" : "Please login to unlock this level";
+                // Optionally show modal or redirect. Prompt asks for redirect or modal. Redirecting is fine.
+                // We'll redirect to login.html explicitly.
+                if(confirm(msg + ' \nLanjut ke halaman Login? / Proceed to Login?')) {
+                    window.location.href = "login.html";
+                }
+            };
+            card.insertAdjacentHTML('beforeend', `<div class="lock-overlay" title="${lang === 'id' ? 'Login untuk membuka' : 'Login to unlock'}">🔒</div>`);
+        }
     });
 
     const quotes = [
