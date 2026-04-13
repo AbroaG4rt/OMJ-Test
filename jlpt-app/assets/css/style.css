@@ -581,7 +581,7 @@ body.login-layout {
 /* Torii Gate Decoration */
 .torii-decoration {
     position: absolute;
-    top: 20vh;
+    top: -24vh;
     right: 18vw;
     width: 850px;
     opacity: 0.5;
