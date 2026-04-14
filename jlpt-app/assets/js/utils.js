@@ -123,36 +123,41 @@ window.OmoshiroiUtils = {
 // Global Security Settings
 document.addEventListener('contextmenu', event => event.preventDefault()); // Disable right click
 
-// Global Mobile Navigation Logic
+// Global Mobile Navigation Bootstrapper
 document.addEventListener('DOMContentLoaded', () => {
-    const hamburgerBtn = document.getElementById('mobileMenuBtn');
     const navLinks = document.querySelector('.nav-links');
-    const navOverlay = document.getElementById('mobileNavOverlay');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
 
-    if (hamburgerBtn && navLinks && navOverlay) {
-        function toggleMenu() {
-            const isActive = navLinks.classList.toggle('active');
-            navOverlay.classList.toggle('active');
-            
-            if (isActive) {
-                document.body.classList.add('nav-open');
-                hamburgerBtn.innerHTML = '&#10005;'; // X icon
-            } else {
-                document.body.classList.remove('nav-open');
-                hamburgerBtn.textContent = '☰'; // Hamburger icon
+    if (navLinks && mobileMenuBtn) {
+        if (!document.getElementById('mobileOverlay')) {
+            const overlay = document.createElement('div');
+            overlay.id = 'mobileOverlay';
+            overlay.className = 'mobile-overlay';
+            document.body.appendChild(overlay);
+        }
+        
+        const overlay = document.getElementById('mobileOverlay');
+
+        function toggleMobileNav() {
+            const isOpening = !navLinks.classList.contains('nav-active');
+            navLinks.classList.toggle('nav-active');
+            overlay.classList.toggle('active');
+            document.body.style.overflow = isOpening ? 'hidden' : '';
+        }
+
+        function closeMobileNav() {
+            if (navLinks.classList.contains('nav-active')) {
+                navLinks.classList.remove('nav-active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
             }
         }
 
-        hamburgerBtn.addEventListener('click', toggleMenu);
-        navOverlay.addEventListener('click', toggleMenu);
-
-        // Auto collapse on link click
-        navLinks.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                if (navLinks.classList.contains('active')) {
-                    toggleMenu();
-                }
-            });
+        mobileMenuBtn.addEventListener('click', toggleMobileNav);
+        overlay.addEventListener('click', closeMobileNav);
+        
+        navLinks.querySelectorAll('a').forEach(anchor => {
+            anchor.addEventListener('click', closeMobileNav);
         });
     }
 });
