@@ -11,12 +11,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    // Initialize section state if older testState
+    if (typeof testState.currentSectionIndex === 'undefined') {
+        testState.currentSectionIndex = 0;
+        testState.completedSections = [];
+        localStorage.setItem('omoshiroi_active_test', JSON.stringify(testState));
+    }
+
     const { level, endTime } = testState;
 
-    if (!OmoshiroiUtils.checkAccess(level)) {
-        alert(__lang === 'id' ? "Akses Ditolak. Silakan login." : "Access Denied. Please login.");
-        window.location.href = __lang === 'id' ? 'id/login.html' : 'en/login.html';
-        return;
+    if (!window.OmoshiroiUtils || !OmoshiroiUtils.checkAccess(level)) {
+        // Fallback check if utils not loaded properly
+        const checkAccessFallback = (lvl) => {
+            const users = JSON.parse(localStorage.getItem('omoshiroi_users') || '[]');
+            const activeUser = sessionStorage.getItem('omoshiroi_active_user');
+            if(!activeUser) return false;
+            if(lvl === 'N5') return true;
+            return false;
+        };
+        if (window.OmoshiroiUtils && !OmoshiroiUtils.checkAccess(level)) {
+            alert(__lang === 'id' ? "Akses Ditolak. Silakan login." : "Access Denied. Please login.");
+            window.location.href = __lang === 'id' ? 'id/login.html' : 'en/login.html';
+            return;
+        }
     }
     document.getElementById('testLevelBadge').textContent = level;
 
@@ -38,45 +55,125 @@ document.addEventListener('DOMContentLoaded', async () => {
     const forceSubmitBtn = document.getElementById('forceSubmitBtn');
     const progressBar = document.getElementById('progressBar');
     const progressText = document.getElementById('progressText');
+    
+    // UI Containers
+    const introContainer = document.getElementById('introContainer');
+    const examContainer = document.getElementById('examContainer');
+    const currentSectionTitle = document.getElementById('currentSectionTitle');
+    const floatingWarning = document.getElementById('floatingWarning');
+    const emergencyAudio = document.getElementById('emergencyAudio');
 
-    let allQuestions = [];
+    let sections = [];
+    let currentSectionData = null;
     const QUESTIONS_PER_PAGE = 10;
     let currentPage = 0;
     let totalPages = 0;
 
+    // Audio tracking
+    let activeAudioElements = [];
+
     // Timer Logic
+    let lastPlayedSecond = -1;
+    let isSubmitting = false;
+
+    function stopAllAudio() {
+        activeAudioElements.forEach(audio => {
+            audio.pause();
+            audio.currentTime = 0;
+        });
+        activeAudioElements = [];
+        if (emergencyAudio) {
+            emergencyAudio.pause();
+            emergencyAudio.currentTime = 0;
+        }
+    }
+
     const timerInterval = setInterval(() => {
+        if (isSubmitting) return;
+
         const now = new Date().getTime();
         const distance = endTime - now;
 
         if (distance <= 0) {
             clearInterval(timerInterval);
             timerDisplay.textContent = "00:00";
+            document.body.classList.remove('emergency-mode');
+            stopAllAudio();
+            isSubmitting = true;
+            
             alert(__lang === 'id' ? 'Waktu habis! Ujian dikirim otomatis.' : 'Time is up! Submitting automatically.');
             submitTest();
             return;
         }
 
         const secondsLeft = Math.floor(distance / 1000);
-        timerDisplay.textContent = OmoshiroiUtils.formatTime(secondsLeft);
+        
+        // Use utils if available, else inline format
+        const formatTime = (secs) => {
+            const h = Math.floor(secs / 3600);
+            const m = Math.floor((secs % 3600) / 60);
+            const s = secs % 60;
+            if (h > 0) return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        };
+        
+        timerDisplay.textContent = window.OmoshiroiUtils ? OmoshiroiUtils.formatTime(secondsLeft) : formatTime(secondsLeft);
 
-        if (secondsLeft < 300) { // Last 5 minutes
-            timerDisplay.classList.add('timer-critical');
+        // 10 minutes warning
+        if (secondsLeft <= 600 && secondsLeft > 60) {
+            if (!floatingWarning.classList.contains('active')) {
+                floatingWarning.classList.add('active');
+            }
+        } else {
+            floatingWarning.classList.remove('active');
         }
+
+        // 1 minute emergency mode
+        if (secondsLeft <= 60 && secondsLeft > 0) {
+            if (!document.body.classList.contains('emergency-mode')) {
+                document.body.classList.add('emergency-mode');
+            }
+            if (lastPlayedSecond !== secondsLeft) {
+                if (emergencyAudio) {
+                    emergencyAudio.currentTime = 0;
+                    emergencyAudio.play().catch(e => console.log('Emergency audio play blocked', e));
+                }
+                lastPlayedSecond = secondsLeft;
+            }
+        } else {
+            document.body.classList.remove('emergency-mode');
+        }
+
     }, 1000);
 
     // Fetch Questions
     try {
         const response = await fetch(`data/${level}.json`);
-        let questions = await response.json();
+        const data = await response.json();
+        sections = data.sections;
+
+        if (!sections || sections.length === 0) {
+            throw new Error("Invalid sections data format.");
+        }
+
+        // Shuffle questions within each section
+        sections.forEach(sec => {
+            sec.questions = sec.questions.sort(() => Math.random() - 0.5);
+        });
         
-        // Shuffle questions
-        questions = questions.sort(() => Math.random() - 0.5);
-        allQuestions = questions;
-        totalPages = Math.ceil(allQuestions.length / QUESTIONS_PER_PAGE);
-        
-        renderPage(0);
-        updateProgress();
+        // Find the first uncompleted section
+        let initialSection = testState.currentSectionIndex;
+        while (initialSection < sections.length && testState.completedSections.includes(initialSection)) {
+            initialSection++;
+        }
+
+        if (initialSection >= sections.length) {
+            // All completed? Just submit
+            submitTest();
+        } else {
+            showIntro(initialSection);
+        }
+
     } catch (error) {
         console.error("Failed to load questions", error);
         questionsContainer.innerHTML = "<p class='text-center'>Error loading questions. Please try again.</p>";
@@ -84,21 +181,51 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function sanitizeHTML(str) {
         if (!str) return '';
-        // Basic protection: Remove script tags
         return str.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-                  // Also remove on... event attributes
                   .replace(/ on\w+="[^"]*"/g, '')
                   .replace(/ on\w+='[^']*'/g, '')
                   .replace(/ on\w+=\w+/g, '');
     }
 
+    function showIntro(sectionIndex) {
+        stopAllAudio();
+        examContainer.style.display = 'none';
+        introContainer.style.display = 'block';
+        
+        const sec = sections[sectionIndex];
+        document.getElementById('introTitle').textContent = sec.title;
+        document.getElementById('introQuestionCount').textContent = __lang === 'id' 
+            ? `Jumlah Pertanyaan: ${sec.questions.length}` 
+            : `Number of questions: ${sec.questions.length}`;
+
+        document.getElementById('startSectionBtn').onclick = () => {
+            startSection(sectionIndex);
+        };
+    }
+
+    function startSection(sectionIndex) {
+        introContainer.style.display = 'none';
+        examContainer.style.display = 'block';
+        
+        testState.currentSectionIndex = sectionIndex;
+        localStorage.setItem('omoshiroi_active_test', JSON.stringify(testState));
+
+        currentSectionData = sections[sectionIndex];
+        currentSectionTitle.textContent = currentSectionData.title;
+        totalPages = Math.ceil(currentSectionData.questions.length / QUESTIONS_PER_PAGE);
+        
+        renderPage(0);
+        updateProgress();
+    }
+
     function renderPage(pageIndex) {
+        stopAllAudio(); // Stop any playing audio when changing pages
         currentPage = pageIndex;
         questionsContainer.innerHTML = '';
 
         const startIdx = pageIndex * QUESTIONS_PER_PAGE;
-        const endIdx = Math.min(startIdx + QUESTIONS_PER_PAGE, allQuestions.length);
-        const pageQuestions = allQuestions.slice(startIdx, endIdx);
+        const endIdx = Math.min(startIdx + QUESTIONS_PER_PAGE, currentSectionData.questions.length);
+        const pageQuestions = currentSectionData.questions.slice(startIdx, endIdx);
 
         pageQuestions.forEach((q, idx) => {
             const globalIndex = startIdx + idx + 1;
@@ -107,7 +234,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             let mediaHTML = '';
             if (q.image && q.type !== 'image') {
-                // Regular question with image
                 mediaHTML += `<img src="assets/images/${q.image}" alt="Question Image" style="max-width:100%; border-radius:4px; margin-bottom:1rem; display:block;">`;
             }
             if (q.audio) {
@@ -138,9 +264,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             let optionsHTML = '';
             
-            // Check if options is Array (image type requirement)
             if (Array.isArray(q.options)) {
-                // Grid wrapper handle in CSS but we can add inline here optionally
                 optionsHTML += `<div class="options-grid image-grid">`;
                 q.options.forEach(opt => {
                     const isChecked = testState.answers[q.id] === opt.label;
@@ -156,7 +280,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
                 optionsHTML += `</div>`;
             } else {
-                // Object options (existing format)
                 optionsHTML += `<div class="options-grid">`;
                 for (const [key, value] of Object.entries(q.options)) {
                     const isChecked = testState.answers[q.id] === key;
@@ -183,6 +306,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             btn.addEventListener('click', function() {
                 if (this.disabled) return;
                 
+                // Stop other audios to prevent overlap
+                activeAudioElements.forEach(a => { a.pause(); a.currentTime = 0; });
+                activeAudioElements = [];
+
                 const qid = this.getAttribute('data-qid');
                 const audioFile = this.getAttribute('data-audio');
                 const maxPlays = parseInt(this.getAttribute('data-max'), 10);
@@ -190,8 +317,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let playedCount = parseInt(localStorage.getItem(`audio_${qid}_playcount`) || '0', 10);
                 
                 if (playedCount < maxPlays) {
-                    // Play audio
                     const audioObj = new Audio(`assets/audio/${audioFile}`);
+                    activeAudioElements.push(audioObj);
+                    
                     audioObj.play().catch(e => {
                         console.error('Audio play failed', e);
                         alert(__lang === 'id' ? 'Gagal memutar audio.' : 'Failed to play audio.');
@@ -218,21 +346,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         });
 
-        // Add event listeners to labels for custom styling
         document.querySelectorAll('.option-label').forEach(label => {
             label.addEventListener('click', function(e) {
-                // The label click will automatically check the radio button
                 const qid = this.getAttribute('data-qid');
                 const opt = this.getAttribute('data-opt');
                 
-                // Remove selected class from all labels in this question group
                 const parentGroup = this.parentElement;
                 parentGroup.querySelectorAll('.option-label').forEach(l => l.classList.remove('selected'));
-                
-                // Add selected class to this
                 this.classList.add('selected');
 
-                // Save to state instantly
                 testState.answers[qid] = opt;
                 localStorage.setItem('omoshiroi_active_test', JSON.stringify(testState));
                 
@@ -240,16 +362,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         });
 
-        // Pagination Buttons State
         prevBtn.disabled = currentPage === 0;
         
         if (currentPage === totalPages - 1) {
-            nextBtn.textContent = "Finish Test";
+            nextBtn.textContent = __lang === 'id' ? "Selesaikan Bagian" : "Finish Section";
             nextBtn.classList.remove('btn-primary');
             nextBtn.classList.add('btn-primary');
             nextBtn.style.backgroundColor = "var(--success-color)";
         } else {
-            nextBtn.textContent = "Next →";
+            nextBtn.textContent = __lang === 'id' ? "Selanjutnya →" : "Next →";
             nextBtn.classList.remove('btn-primary');
             nextBtn.classList.add('btn-primary');
             nextBtn.style.backgroundColor = "var(--primary)";
@@ -257,12 +378,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function updateProgress() {
-        const answeredCount = Object.keys(testState.answers).length;
-        const total = allQuestions.length;
-        const percentage = total > 0 ? (answeredCount / total) * 100 : 0;
+        if (!currentSectionData) return;
+        
+        // Calculate progress for current section only
+        let answeredInSection = 0;
+        currentSectionData.questions.forEach(q => {
+            if (testState.answers[q.id]) answeredInSection++;
+        });
+
+        const total = currentSectionData.questions.length;
+        const percentage = total > 0 ? (answeredInSection / total) * 100 : 0;
         
         progressBar.style.width = `${percentage}%`;
-        progressText.textContent = `${answeredCount} / ${total}`;
+        progressText.textContent = `${answeredInSection} / ${total}`;
     }
 
     prevBtn.addEventListener('click', () => {
@@ -275,11 +403,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderPage(currentPage + 1);
             window.scrollTo(0, 0);
         } else {
+            // Finish Section
             const confirmMsg = __lang === 'id'
-                ? 'Apakah Anda yakin ingin mengirimkan ujian ini?'
-                : 'Are you sure you want to submit your test?';
+                ? 'Apakah Anda yakin ingin menyelesaikan bagian ini? Anda TIDAK akan bisa kembali ke bagian ini.'
+                : 'Are you sure you want to finish this section? You will NOT be able to return.';
+            
             if (confirm(confirmMsg)) {
-                submitTest();
+                testState.completedSections.push(testState.currentSectionIndex);
+                localStorage.setItem('omoshiroi_active_test', JSON.stringify(testState));
+                
+                if (testState.currentSectionIndex < sections.length - 1) {
+                    showIntro(testState.currentSectionIndex + 1);
+                    window.scrollTo(0, 0);
+                } else {
+                    submitTest();
+                }
             }
         }
     });
@@ -289,24 +427,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             ? 'Anda akan mengirim ujian secara paksa. Pertanyaan yang belum dijawab akan dianggap salah. Lanjutkan?'
             : 'You are about to force submit your exam. Unanswered questions will be marked incorrect. Proceed?';
         if (confirm(confirmMsg)) {
+            isSubmitting = true;
             submitTest();
         }
     });
 
     function submitTest() {
         clearInterval(timerInterval);
+        stopAllAudio();
         
-        // Disable lockdown warning so we can redirect gracefully
         window.onbeforeunload = null;
 
-        // Hook anti cheat
         const cheatData = window.AntiCheat ? window.AntiCheat.getProfile() : { tabSwitches: 0, copyAttempts: 0, screenshotAttempts: 0, devToolsAttempts: 0 };
-        
-        // Calculate Cheat Score
         const cheatScore = (cheatData.tabSwitches * 2) + (cheatData.copyAttempts * 1) + (cheatData.screenshotAttempts * 2) + (cheatData.devToolsAttempts * 3);
         cheatData.score = cheatScore;
 
-        // Delegate scoring evaluation to result.js
         const finalResult = {
             level: level,
             answers: testState.answers,
@@ -314,10 +449,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             timestamp: new Date().getTime()
         };
 
-        // Cache for Result Page
         localStorage.setItem('omoshiroi_latest_result', JSON.stringify(finalResult));
-        
-        // Clear active test state securely
         localStorage.removeItem('omoshiroi_active_test');
         localStorage.removeItem('omoshiroi_cheatData');
 
