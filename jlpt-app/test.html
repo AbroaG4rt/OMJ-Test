@@ -8,39 +8,78 @@
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body style="user-select: none;">
-    <header>
+    <!-- Emergency Overlay -->
+    <div id="emergencyOverlay" class="emergency-overlay"></div>
+
+    <!-- Floating 10 min warning -->
+    <div id="floatingWarning" class="floating-warning">
+        <div class="warning-icon">⚠️</div>
+        <div class="warning-text">
+            <strong>Time is running out</strong>
+            <span>Less than 10 minutes remaining.</span>
+        </div>
+    </div>
+
+    <header class="sticky-header">
         <div class="container flex items-center justify-between" style="padding: 0.5rem 1.5rem;">
-            <div class="brand"><img src="assets/images/logo.png" alt="Logo" style="height: 30px; margin-right: 0.5rem;"> OMOSHIROI <span id="testLevelBadge" class="badge" style="background: var(--sakura-accent); color: var(--primary-color);">N5</span></div>
+            <div class="brand"><img src="assets/images/logo.png" alt="Logo" style="height: 30px; margin-right: 0.5rem;"> OMOSHIROI <span id="testLevelBadge" class="badge" style="background: var(--primary-light); color: var(--primary);">N5</span></div>
+            <!-- Persistent Timer -->
+            <div class="timer-container" id="timerDisplay">--:--:--</div>
             <button id="forceSubmitBtn" class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Submit Exam</button>
         </div>
     </header>
 
-    <main class="container">
-        <!-- Persistent Timer -->
-        <div class="text-center">
-            <div class="timer-container" id="timerDisplay">--:--:--</div>
+    <main class="container mt-header">
+        
+        <!-- SECTION INTRO CONTAINER -->
+        <div id="introContainer" class="section-intro card text-center fade-in" style="display: none; padding: 4rem 2rem;">
+            <div class="intro-icon" style="font-size: 3rem; margin-bottom: 1rem; color: var(--primary-color);">📝</div>
+            <h2 id="introTitle" style="margin-bottom: 1rem; font-size: 2rem;">Kanji Section</h2>
+            <div class="intro-description" style="margin-bottom: 2rem; color: var(--text-secondary); max-width: 600px; margin-left: auto; margin-right: auto;">
+                <p id="introQuestionCount" style="font-weight: bold; margin-bottom: 0.5rem;">Number of questions: --</p>
+                <div class="intro-instructions" style="background: var(--bg-color); padding: 1.5rem; border-radius: var(--radius); text-align: left; margin-top: 1.5rem; font-size: 0.95rem;">
+                    <h4 style="margin-bottom: 0.5rem; color: var(--text-color);">Instructions:</h4>
+                    <ul id="introInstructionsList" style="padding-left: 1.5rem; line-height: 1.6;">
+                        <li>Choose the correct reading or meaning.</li>
+                        <li>Do not refresh the page.</li>
+                        <li>Once you complete this section, you cannot return.</li>
+                    </ul>
+                </div>
+            </div>
+            <button id="startSectionBtn" class="btn btn-primary" style="padding: 1rem 3rem; font-size: 1.1rem;">Start Section</button>
         </div>
 
-        <!-- Progress bar -->
-        <div class="progress-container">
-            <div class="progress-bar" id="progressBar" style="width: 0%;"></div>
-        </div>
-        <div class="text-center mb-2" style="font-size: 0.85rem; color: var(--text-secondary);">
-            Question <span id="progressText">0 / 0</span>
-        </div>
+        <!-- EXAM CONTENT CONTAINER -->
+        <div id="examContainer" class="fade-in">
+            <!-- Section Header -->
+            <div class="section-header flex justify-between items-center mb-2">
+                <h3 id="currentSectionTitle" style="color: var(--primary-color); margin: 0;">Kanji</h3>
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                    Question <span id="progressText">0 / 0</span>
+                </div>
+            </div>
 
-        <div id="questionsContainer" class="card mb-2">
-            <!-- Questions rendered via JS -->
-            <div class="text-center" style="padding: 3rem;">
-                <p style="color: var(--text-secondary);">Loading Questions...</p>
+            <!-- Progress bar -->
+            <div class="progress-container mb-2">
+                <div class="progress-bar" id="progressBar" style="width: 0%;"></div>
+            </div>
+
+            <div id="questionsContainer" class="card mb-2">
+                <!-- Questions rendered via JS -->
+                <div class="text-center" style="padding: 3rem;">
+                    <p style="color: var(--text-secondary);">Loading Questions...</p>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center mb-2">
+                <button id="prevBtn" class="btn btn-outline" disabled>← Previous</button>
+                <button id="nextBtn" class="btn btn-primary">Next →</button>
             </div>
         </div>
-
-        <div class="flex justify-between items-center mb-2">
-            <button id="prevBtn" class="btn btn-outline" disabled>← Previous</button>
-            <button id="nextBtn" class="btn btn-primary">Next →</button>
-        </div>
     </main>
+
+    <!-- Emergency Audio (External MP3) -->
+    <audio id="emergencyAudio" src="assets/audio/pip.mp3" preload="auto"></audio>
 
     <script src="assets/js/utils.js"></script>
     <script src="assets/js/anti-cheat.js"></script>
