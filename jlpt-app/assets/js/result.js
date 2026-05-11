@@ -79,7 +79,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         // Fetch Answer Key
         const response = await fetch(`../data/${level}.json`);
-        const allQuestions = await response.json();
+        const rawData = await response.json();
+        const allQuestions = rawData.sections ? rawData.sections.flatMap(s => s.questions) : rawData;
 
         // SCORING LOGIC
         let correctCount = 0;
